@@ -1,0 +1,95 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    background: #f5f7fa;
+    color: #222;
+}
+
+header {
+    background: #172033;
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+}
+
+header h1 {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+header h2 {
+    font-size: 25px;
+    margin-bottom: 15px;
+}
+
+header p {
+    max-width: 600px;
+    margin: 0 auto 25px;
+}
+
+.button {
+    display: inline-block;
+    background: #ffffff;
+    color: #172033;
+    padding: 12px 24px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+section {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+}
+
+section h2 {
+    margin-bottom: 20px;
+    color: #172033;
+}
+
+section p {
+    margin-bottom: 15px;
+}
+
+.skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.skills span {
+    background: #e9eef5;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.project {
+    border-left: 4px solid #172033;
+    padding-left: 20px;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    background: #172033;
+    color: white;
+}
+
+@media (max-width: 600px) {
+    header h1 {
+        font-size: 35px;
+    }
+
+    section {
+        margin: 20px;
+    }
+}
