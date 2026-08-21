@@ -6,14 +6,15 @@ on:
       - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Confirm workflow is running
-        run: |
-          echo "GitHub Actions is working!"
-          echo "DevOps Final Project CI/CD pipeline started."
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Show Docker images
+        run: docker images
