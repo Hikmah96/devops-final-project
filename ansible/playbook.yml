@@ -1,0 +1,70 @@
+- name: Configure and Deploy DevOps Final Project
+  hosts: webserver
+  become: true
+
+  tasks:
+
+    - name: Install required packages
+      dnf:
+        name:
+          - git
+          - java-17-amazon-corretto
+          - docker
+        state: present
+        update_cache: true
+
+    - name: Start Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: true
+
+    - name: Create Docker CLI plugins directory
+      file:
+        path: /usr/local/lib/docker/cli-plugins
+        state: directory
+        mode: '0755'
+
+    - name: Install Docker Compose plugin
+      get_url:
+        url: https://github.com/docker/compose/releases/download/v2.39.1/docker-compose-linux-x86_64
+        dest: /usr/local/lib/docker/cli-plugins/docker-compose
+        mode: '0755'
+
+    - name: Add ec2-user to Docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: true
+
+    - name: Remove old project directory
+      file:
+        path: /home/ec2-user/devops-final-project
+        state: absent
+
+    - name: Clone project from GitHub
+      git:
+        repo: "https://github.com/Hikmah96/devops-final-project.git"
+        dest: /home/ec2-user/devops-final-project
+        version: main
+
+    - name: Build Docker images
+      command:
+        cmd: docker compose build
+        chdir: /home/ec2-user/devops-final-project
+
+    - name: Start application containers
+      command:
+        cmd: docker compose up -d
+        chdir: /home/ec2-user/devops-final-project
+
+    - name: Show running containers
+      command:
+        cmd: docker compose ps
+        chdir: /home/ec2-user/devops-final-project
+      register: compose_status
+      changed_when: false
+
+    - name: Display container status
+      debug:
+        var: compose_status.stdout
