@@ -34,6 +34,7 @@ jobs:
       - name: Test Ansible connection
         env:
           EC2_HOST: ${{ vars.EC2_HOST }}
+          ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
           ansible all \
             -i "$EC2_HOST," \
