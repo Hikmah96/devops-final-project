@@ -39,5 +39,4 @@ jobs:
             -i "$EC2_HOST," \
             -u ec2-user \
             --private-key ec2_key.pem \
-            -m ping \
-            -o
+            -m ping 
