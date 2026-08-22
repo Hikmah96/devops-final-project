@@ -19,17 +19,25 @@ jobs:
       - name: Show Docker images
         run: docker images
 
-      - name: Test SSH connection to EC2
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Create SSH key
         env:
-          EC2_HOST: ${{ vars.EC2_HOST }}
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
           echo "$EC2_SSH_KEY" > ec2_key.pem
           chmod 600 ec2_key.pem
 
-          ssh -i ec2_key.pem \
-            -o StrictHostKeyChecking=no \
-            ec2-user@$EC2_HOST \
-            "echo SSH connection successful"
-
-          rm -f ec2_key.pem
+      - name: Test Ansible connection
+        env:
+          EC2_HOST: ${{ vars.EC2_HOST }}
+        run: |
+          ansible all \
+            -i "$EC2_HOST," \
+            -u ec2-user \
+            --private-key ec2_key.pem \
+            -m ping \
+            -o
