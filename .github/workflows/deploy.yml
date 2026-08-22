@@ -18,3 +18,18 @@ jobs:
 
       - name: Show Docker images
         run: docker images
+
+      - name: Test SSH connection to EC2
+        env:
+          EC2_HOST: ${{ vars.EC2_HOST }}
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+        run: |
+          echo "$EC2_SSH_KEY" > ec2_key.pem
+          chmod 600 ec2_key.pem
+
+          ssh -i ec2_key.pem \
+            -o StrictHostKeyChecking=no \
+            ec2-user@$EC2_HOST \
+            "echo SSH connection successful"
+
+          rm -f ec2_key.pem
