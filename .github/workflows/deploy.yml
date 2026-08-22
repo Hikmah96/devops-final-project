@@ -40,4 +40,4 @@ jobs:
             -u ec2-user \
             --private-key ec2_key.pem \
             -m ping \
-            -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
+            --ssh-extra-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
