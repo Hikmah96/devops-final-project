@@ -41,3 +41,14 @@ jobs:
             --private-key ec2_key.pem \
             -m ping \
             --ssh-extra-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+      - name: Deploy applications with Ansible
+        env:
+          EC2_HOST: ${{ vars.EC2_HOST }}
+        run: |
+          ansible-playbook \
+            -i ansible/inventory \
+            ansible/playbook.yml \
+            -e "ansible_host=$EC2_HOST" \
+            -e "ansible_private_key_file=./ec2_key.pem" \
+            -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
