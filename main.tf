@@ -2,6 +2,15 @@
 # DEVOPS FINAL PROJECT - TERRAFORM INFRASTRUCTURE
 # ============================================================
 
+terraform {
+  required_version = ">= 1.5.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+    }
+  }
+}
 
 # ============================================================
 # AWS PROVIDER
@@ -11,14 +20,12 @@ provider "aws" {
   region = "us-east-1"
 }
 
-
 # ============================================================
 # VPC
 # ============================================================
 
 resource "aws_vpc" "devops_vpc" {
-  cidr_block = "10.0.0.0/16"
-
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -27,7 +34,6 @@ resource "aws_vpc" "devops_vpc" {
     Project = "DevOps-Final-Project"
   }
 }
-
 
 # ============================================================
 # INTERNET GATEWAY
@@ -41,7 +47,6 @@ resource "aws_internet_gateway" "devops_igw" {
     Project = "DevOps-Final-Project"
   }
 }
-
 
 # ============================================================
 # PUBLIC SUBNET
@@ -57,7 +62,6 @@ resource "aws_subnet" "devops_public_subnet" {
     Project = "DevOps-Final-Project"
   }
 }
-
 
 # ============================================================
 # ROUTE TABLE
@@ -77,7 +81,6 @@ resource "aws_route_table" "devops_route_table" {
   }
 }
 
-
 # ============================================================
 # ROUTE TABLE ASSOCIATION
 # ============================================================
@@ -86,7 +89,6 @@ resource "aws_route_table_association" "devops_route_association" {
   subnet_id      = aws_subnet.devops_public_subnet.id
   route_table_id = aws_route_table.devops_route_table.id
 }
-
 
 # ============================================================
 # SECURITY GROUP
@@ -97,7 +99,6 @@ resource "aws_security_group" "devops_security_group" {
   description = "Security group for DevOps final project"
   vpc_id      = aws_vpc.devops_vpc.id
 
-  # SSH - Ansible will use this to connect to EC2
   ingress {
     description = "SSH for Ansible"
     from_port   = 22
@@ -106,7 +107,6 @@ resource "aws_security_group" "devops_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Portfolio application
   ingress {
     description = "Portfolio application"
     from_port   = 8080
@@ -115,7 +115,6 @@ resource "aws_security_group" "devops_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Java application
   ingress {
     description = "Java application"
     from_port   = 8081
@@ -124,7 +123,6 @@ resource "aws_security_group" "devops_security_group" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Allow all outbound traffic
   egress {
     description = "Allow outbound traffic"
     from_port   = 0
@@ -139,9 +137,8 @@ resource "aws_security_group" "devops_security_group" {
   }
 }
 
-
 # ============================================================
-# EC2 KEY PAIR VARIABLE
+# EC2 KEY PAIR
 # ============================================================
 
 variable "instance_keypair" {
@@ -150,7 +147,6 @@ variable "instance_keypair" {
   default     = "devops-final-key"
   sensitive   = true
 }
-
 
 # ============================================================
 # EC2 SERVER
@@ -176,9 +172,8 @@ resource "aws_instance" "devops_server" {
   }
 }
 
-
 # ============================================================
-# TERRAFORM OUTPUTS
+# OUTPUTS
 # ============================================================
 
 output "vpc_id" {
