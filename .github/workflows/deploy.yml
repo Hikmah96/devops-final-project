@@ -13,11 +13,40 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # ==============================
+      # TERRAFORM
+      # ==============================
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: terraform init -reconfigure
+
+      - name: Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
+        run: terraform plan
+
+      # ==============================
+      # DOCKER
+      # ==============================
+
       - name: Build Docker images
         run: docker compose build
 
       - name: Show Docker images
         run: docker images
+
+      # ==============================
+      # ANSIBLE
+      # ==============================
 
       - name: Install Ansible
         run: |
