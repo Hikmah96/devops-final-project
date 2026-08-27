@@ -44,6 +44,7 @@ jobs:
         id: ec2ip
         run: |
           echo "EC2_HOST=$(terraform output -raw server_public_ip)" >> "$GITHUB_ENV"
+          echo "Using EC2 host: ${EC2_HOST}"
 
       - name: Install Ansible
         run: |
@@ -79,8 +80,10 @@ jobs:
 
       - name: Verify Portfolio Application
         run: |
+          echo "Checking portfolio at http://${EC2_HOST}:8080"
           curl --fail --retry 20 --retry-delay 10 "http://${EC2_HOST}:8080"
 
       - name: Verify Java Application
         run: |
+          echo "Checking java app at http://${EC2_HOST}:8081/sampleapp/"
           curl --fail --retry 20 --retry-delay 10 "http://${EC2_HOST}:8081/sampleapp/"
