@@ -1,9 +1,9 @@
 - name: Configure and Deploy DevOps Final Project
   hosts: webserver
   become: true
+  gather_facts: true
 
   tasks:
-
     - name: Install required packages
       dnf:
         name:
@@ -37,7 +37,7 @@
         groups: docker
         append: true
 
-    - name: Remove old project directory
+    - name: Ensure repo directory is absent before cloning
       file:
         path: /home/ec2-user/devops-final-project
         state: absent
@@ -49,18 +49,18 @@
         version: main
 
     - name: Build Docker images
-      command:
-        cmd: docker compose build
+      command: docker compose build
+      args:
         chdir: /home/ec2-user/devops-final-project
 
     - name: Start application containers
-      command:
-        cmd: docker compose up -d
+      command: docker compose up -d
+      args:
         chdir: /home/ec2-user/devops-final-project
 
     - name: Show running containers
-      command:
-        cmd: docker compose ps
+      command: docker compose ps
+      args:
         chdir: /home/ec2-user/devops-final-project
       register: compose_status
       changed_when: false

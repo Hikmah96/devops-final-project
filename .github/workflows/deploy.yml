@@ -9,138 +9,78 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
+    env:
+      AWS_DEFAULT_REGION: us-east-1
+
     steps:
-
-      # ============================================================
-      # 1. CHECKOUT SOURCE CODE
-      # ============================================================
-
       - name: Checkout code
         uses: actions/checkout@v4
 
-
-      # ============================================================
-      # 2. BUILD DOCKER APPLICATIONS
-      # ============================================================
-
-      - name: Build Docker images
-        run: docker compose build
-
-      - name: Show Docker images
-        run: docker images
-
-
-      # ============================================================
-      # 3. SETUP TERRAFORM
-      # ============================================================
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
-
-
-      # ============================================================
-      # 4. TERRAFORM INITIALIZATION
-      # ============================================================
 
       - name: Terraform Init
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
         run: terraform init
-
-
-      # ============================================================
-      # 5. TERRAFORM VALIDATION
-      # ============================================================
 
       - name: Terraform Validate
         run: terraform validate
-
-
-      # ============================================================
-      # 6. TERRAFORM PLAN
-      # ============================================================
 
       - name: Terraform Plan
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: us-east-1
         run: terraform plan
 
+      - name: Terraform Apply
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform apply -auto-approve
 
-      # ============================================================
-      # 7. INSTALL ANSIBLE
-      # ============================================================
+      - name: Get EC2 public IP
+        id: ec2ip
+        run: |
+          echo "EC2_HOST=$(terraform output -raw server_public_ip)" >> "$GITHUB_ENV"
 
       - name: Install Ansible
         run: |
           sudo apt-get update
           sudo apt-get install -y ansible
 
-
-      # ============================================================
-      # 8. CREATE SSH PRIVATE KEY
-      # ============================================================
-
       - name: Create SSH key
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
         run: |
-          echo "$EC2_SSH_KEY" > ec2_key.pem
-          chmod 600 ec2_key.pem
+          mkdir -p ~/.ssh
+          echo "$EC2_SSH_KEY" > ~/.ssh/devops-final-key.pem
+          chmod 600 ~/.ssh/devops-final-key.pem
 
-
-      # ============================================================
-      # 9. TEST ANSIBLE CONNECTION
-      # ============================================================
-
-      - name: Test Ansible connection
-        env:
-          EC2_HOST: ${{ vars.EC2_HOST }}
+      - name: Wait for EC2 SSH to become available
         run: |
-          ansible all \
-            -i "$EC2_HOST," \
-            -u ec2-user \
-            --private-key ec2_key.pem \
-            -m ping \
-            --ssh-extra-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+          for i in $(seq 1 30); do
+            ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i ~/.ssh/devops-final-key.pem ec2-user@${EC2_HOST} "echo ready" && exit 0
+            sleep 10
+          done
+          echo "EC2 instance did not become reachable in time" >&2
+          exit 1
 
-
-      # ============================================================
-      # 10. RUN ANSIBLE DEPLOYMENT
-      # ============================================================
-
-      - name: Deploy applications with Ansible
-        env:
-          EC2_HOST: ${{ vars.EC2_HOST }}
+      - name: Configure EC2 server with Ansible
         run: |
           ansible-playbook \
             -i ansible/inventory \
             ansible/playbook.yml \
-            -e "ansible_host=$EC2_HOST" \
-            -e "ansible_private_key_file=./ec2_key.pem" \
+            -e "ansible_host=${EC2_HOST}" \
+            -e "ansible_user=ec2-user" \
+            -e "ansible_private_key_file=~/.ssh/devops-final-key.pem" \
             -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"'
 
-
-      # ============================================================
-      # 11. VERIFY PORTFOLIO APPLICATION
-      # ============================================================
-
       - name: Verify Portfolio Application
-        env:
-          EC2_HOST: ${{ vars.EC2_HOST }}
         run: |
-          curl --fail --retry 5 --retry-delay 5 "http://$EC2_HOST:8080"
-
-
-      # ============================================================
-      # 12. VERIFY JAVA APPLICATION
-      # ============================================================
+          curl --fail --retry 20 --retry-delay 10 "http://${EC2_HOST}:8080"
 
       - name: Verify Java Application
-        env:
-          EC2_HOST: ${{ vars.EC2_HOST }}
         run: |
-          curl --fail --retry 5 --retry-delay 5 "http://$EC2_HOST:8081/sampleapp/"
+          curl --fail --retry 20 --retry-delay 10 "http://${EC2_HOST}:8081/sampleapp/"
